@@ -1,0 +1,124 @@
+create table source1 (Id INT ,EmpName VARCHAR(22),EmpAddress varchar(22),Location varchar(22),salary int)
+insert into source1 values (101,'Ramu','hyderbad','TS',8500)
+insert into source1 values (102,'Midhun','jaggayyapeta','AP',3400)
+insert into source1 values (103,'Harshit','chennai','AP',345)
+
+create table destination 
+(Empid int,
+EmpName varchar(22),
+EmpAddress varchar(22),
+Location varchar(22),
+Salary int,
+StartDate datetime ,
+Enddate datetime,
+Active_indicator varchar (22),
+InsertedDatetime datetime,
+updatedDatetime datetime,
+action varchar(22)
+)
+select * from source1
+select * from destination
+
+
+update source1
+set EmpName = 'sandeep'
+where id = 103
+
+ INSERT INTO destination 
+ ( 
+ empid,
+  empname,
+  empaddress,
+  location,
+  salary,
+  startdate,
+  enddate,
+  active_indicator,
+  InsertedDatetime,
+  updatedDatetime,
+  action
+ )
+select 
+  empid,
+  empname,
+  empaddress,
+  location,
+  salary,
+  startdate,
+  enddate,
+  active_indicator,
+  inserteddatetime,
+  updatedDatetime,
+  action
+
+from
+(
+ merge into destination dst
+  using source1 src 
+  on (src.Id = dst.Empid) and dst.active_indicator = 'y'
+  when matched and 
+  dst.EmpName<> Src.EmpName or 
+  dst.Empaddress <> src.empAddress or
+  dst.location <> src.location or 
+  dst.salary <> src.salary and 
+  dst.active_indicator = 'y'
+  then update 
+    set dst.enddate = getdate()-1 ,
+        dst.active_indicator  = 'n' ,
+        dst.updatedDatetime = getdate()
+
+   when not matched by target  then 
+   insert 
+   (empid,
+  empname,
+  empaddress,
+  location,
+  salary,
+  startdate,
+  enddate,
+  active_indicator,
+  inserteddatetime,
+  updateddatetime,
+  action
+)
+values 
+(
+src.id,
+src.empName,
+src.empAddress,
+src.location,
+src.salary,
+getdate(),
+'12/12/1999',
+'y',
+GETDATE(),
+null,
+'insert'
+)
+output $action,
+src.id,
+src.empName,
+src.empAddress,
+src.location,
+src.salary,
+getdate(),
+'12/12/1999',
+'y',
+GETDATE(),
+null
+)
+    as changes 
+(
+  action,  
+   empid,
+  empname,
+  empaddress,
+  location,
+  salary,
+  startdate,
+  enddate,
+  active_indicator,
+  inserteddatetime,
+  updatedDatetime
+  )
+ where  action = 'update';
